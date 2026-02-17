@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Vue build
+ui/dist/
+
+# Wrangler
+worker/.wrangler/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backup API
+api-aspnet-backup/
+
+
+node_modules
+.wrangler

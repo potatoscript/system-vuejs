@@ -1,0 +1,9 @@
+name = "system-api"
+main = "src/index.js"
+compatibility_date = "2026-02-17"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "system-db"
+database_id = "379c1f99-d558-4293-841d-2928bc0ccbce"

@@ -432,3 +432,8 @@ $RECYCLE.BIN/
 !.vscode/launch.json
 !.vscode/extensions.json
 "dist/" 
+
+
+node_modules
+dist
+.env
