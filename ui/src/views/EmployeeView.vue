@@ -108,7 +108,7 @@ import axios from "axios";
 import ja from "../locales/ja.json";
 import InputModalView from "./InputModalView.vue";
 
-const API_BASE = "https://system-api.potatoscript-com.workers.dev/api/users";
+const API_BASE = "https://system-vuejs.potatoscript-com.workers.dev/api/users";
 
 export default {
   components: {
