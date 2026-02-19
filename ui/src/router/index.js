@@ -1,12 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import JobView from '../views/JobView.vue'
-import SignUp from '../components/SignUp.vue'
-import Login from '../components/Login.vue'
+
 const routes = [
   {
     path: '/',
     name: 'job',
-    component: JobView, SignUp, Login
+    component: JobView
   },
   {
     path: '/employee',
@@ -26,7 +25,8 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHistory(),
   routes
 })
+
 export default router

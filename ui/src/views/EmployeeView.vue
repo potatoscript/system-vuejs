@@ -113,17 +113,14 @@
   </div>
 </template>
 <script>
-import url from "../assets/js/url.js";
-import axios from "axios";
 import ja from "../locales/ja.json";
 import InputModalView from "./InputModalView.vue";
-// dummy data
-import dummy from "../assets/dummy.json";
+
+const API = "https://system-api.potatoscript-com.workers.dev/api/users";
 
 export default {
-  components: {
-    InputModalView,
-  },
+  components: { InputModalView },
+
   data() {
     return {
       Department: "",
@@ -142,7 +139,12 @@ export default {
       Position: "",
     };
   },
+
   methods: {
+
+    // =====================
+    // ADD
+    // =====================
     addClick() {
       this.modalTitle = ja.New;
       this.EmployeeId = 0;
@@ -150,78 +152,95 @@ export default {
       this.Position = "";
       this.Department = "";
     },
-    createClick() {
-      const self = this;
-      axios
-        .post(url.API_URL + "Employee/create-employee", {
-          Name: this.Name,
-          Department: this.Department,
-          Position: this.Position,
-        })
-        .then(() => {
-          document.getElementById("modal-close-btn").click();
-          self.refreshData();
-        })
-        .catch((error) => {
-          alert("No Connection " + error);
+
+    // =====================
+    // CREATE
+    // =====================
+    async createClick() {
+      try {
+        await fetch(API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: this.Name,
+            department: this.Department,
+            position: this.Position
+          })
         });
-    },
-    deleteClick(id) {
-      const self = this;
-      if (!confirm(ja.ConfirmDelete)) {
-        return;
+
+        document.getElementById("modal-close-btn").click();
+        this.refreshData();
+
+      } catch (error) {
+        alert("No Connection " + error);
       }
-      axios
-        .delete(url.API_URL + "Employee/delete-employee-by-id/" + id)
-        .then(() => {
-          document.getElementById("modal-close-btn").click();
-          self.refreshData();
-        })
-        .catch((error) => {
-          alert("No Connection " + error);
-        });
     },
+
+    // =====================
+    // DELETE
+    // =====================
+    async deleteClick(id) {
+      if (!confirm(ja.ConfirmDelete)) return;
+
+      try {
+        await fetch(`${API}/${id}`, { method: "DELETE" });
+        this.refreshData();
+      } catch (error) {
+        alert("No Connection " + error);
+      }
+    },
+
+    // =====================
+    // EDIT
+    // =====================
     editClick(emp) {
       this.modalTitle = ja.Edit;
-      this.EmployeeId = emp.employeeId;
+      this.EmployeeId = emp.id;
       this.Name = emp.name;
       this.Position = emp.position;
       this.Department = emp.department;
     },
-    refreshData() {
-      const self = this;
-      axios
-        .get(url.API_URL + "Employee/read-all-employees")
-        .then((response) => {
-          self.employees = response.data;
-        })
-        .catch((error) => {
-          console.log(error);
-          // 接続がない場合、ダミーデータが使用されます
-          self.employees = dummy[0].employees;
-        });
+
+    // =====================
+    // READ
+    // =====================
+    async refreshData() {
+      try {
+        const res = await fetch(API);
+        this.employees = await res.json();
+      } catch (error) {
+        console.log(error);
+        this.employees = [];
+      }
     },
-    updateClick() {
-      const self = this;
-      axios
-        .put(url.API_URL + "Employee/update-employee-by-id/", {
-          EmployeeId: this.EmployeeId,
-          Name: this.Name,
-          Department: this.Department,
-          Position: this.Position,
-          Email: this.Email,
-        })
-        .then(() => {
-          document.getElementById("modal-close-btn").click();
-          self.refreshData();
-        })
-        .catch((error) => {
-          alert("No Connection " + error);
+
+    // =====================
+    // UPDATE
+    // =====================
+    async updateClick() {
+      try {
+        await fetch(`${API}/${this.EmployeeId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: this.Name,
+            department: this.Department,
+            position: this.Position
+          })
         });
-    },
+
+        document.getElementById("modal-close-btn").click();
+        this.refreshData();
+
+      } catch (error) {
+        alert("No Connection " + error);
+      }
+    }
   },
-  mounted: function () {
+
+  mounted() {
     this.refreshData();
-  },
+  }
 };
 </script>
+
