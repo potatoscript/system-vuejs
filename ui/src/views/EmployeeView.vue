@@ -104,11 +104,14 @@
 </template>
 
 <script>
-import axios from "axios";
 import ja from "../locales/ja.json";
 import InputModalView from "./InputModalView.vue";
-
-const API_BASE = "https://system-vuejs.potatoscript-com.workers.dev/api/users";
+import {
+  getUsers,
+  createUser,
+  updateUser,
+  deleteUser
+} from "../api/users";
 
 export default {
   components: {
@@ -141,8 +144,7 @@ export default {
     // =============================
     async refreshData() {
       try {
-        const response = await axios.get(API_BASE);
-        this.employees = response.data;
+        this.employees = await getUsers();
       } catch (error) {
         alert("Failed to fetch data: " + error);
       }
@@ -164,7 +166,7 @@ export default {
     // =============================
     async createClick() {
       try {
-        await axios.post(API_BASE, {
+        await createUser({
           name: this.Name,
           department: this.Department,
           position: this.Position
@@ -193,7 +195,7 @@ export default {
     // =============================
     async updateClick() {
       try {
-        await axios.put(`${API_BASE}/${this.EmployeeId}`, {
+        await updateUser(this.EmployeeId, {
           name: this.Name,
           department: this.Department,
           position: this.Position
@@ -213,7 +215,7 @@ export default {
       if (!confirm("Are you sure you want to delete?")) return;
 
       try {
-        await axios.delete(`${API_BASE}/${id}`);
+        await deleteUser(id);
         this.refreshData();
       } catch (error) {
         alert("Delete failed: " + error);
