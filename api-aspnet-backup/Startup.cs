@@ -41,7 +41,7 @@ namespace JobApi
                 options.AddDefaultPolicy(
                     builder =>
                     {
-                        builder.WithOrigins("https://localhost:44306", "http://localhost:8082")
+                        builder.WithOrigins("https://system-api.potatoscript-com.workers.dev", "https://system-vuejs.pages.dev")
                                             .AllowAnyHeader()
                                             .AllowAnyMethod();
                     });
