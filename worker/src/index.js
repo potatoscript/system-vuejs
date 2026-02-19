@@ -2,75 +2,118 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // ---- CORS ----
     const corsHeaders = {
       "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+      "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type"
     };
 
-    // Handle preflight
+    // =============================
+    // Handle CORS Preflight
+    // =============================
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders });
     }
 
     try {
 
-      // =========================
-      // GET /api/users
-      // =========================
+      // ============================================
+      // GET ALL USERS
+      // ============================================
       if (url.pathname === "/api/users" && request.method === "GET") {
+
         const result = await env.DB
-          .prepare("SELECT * FROM users")
+          .prepare("SELECT * FROM users ORDER BY id DESC")
           .all();
 
-        return new Response(
-          JSON.stringify(result.results),
-          { headers: corsHeaders }
-        );
+        return Response.json(result.results, { headers: corsHeaders });
       }
 
-      // =========================
-      // POST /api/users
-      // =========================
+
+      // ============================================
+      // CREATE USER
+      // ============================================
       if (url.pathname === "/api/users" && request.method === "POST") {
+
         const body = await request.json();
 
-        if (!body.name || !body.email) {
-          return new Response(
-            JSON.stringify({ error: "Missing fields" }),
+        if (!body.name) {
+          return Response.json(
+            { error: "Name is required" },
             { status: 400, headers: corsHeaders }
           );
         }
 
-        const res = await env.DB
-          .prepare("INSERT INTO users (name,email) VALUES (?,?)")
-          .bind(body.name, body.email)
-          .run();
+        await env.DB.prepare(
+          "INSERT INTO users (name, department, position) VALUES (?, ?, ?)"
+        )
+        .bind(
+          body.name,
+          body.department || "",
+          body.position || ""
+        )
+        .run();
 
-        return new Response(
-          JSON.stringify({
-            success: true,
-            id: res.meta.last_row_id
-          }),
+        return Response.json(
+          { success: true },
           { headers: corsHeaders }
         );
       }
 
-      // =========================
-      // Default 404
-      // =========================
-      return new Response(
-        JSON.stringify({ error: "Not Found" }),
-        { status: 404, headers: corsHeaders }
-      );
+
+      // ============================================
+      // UPDATE USER
+      // ============================================
+      if (url.pathname.startsWith("/api/users/") && request.method === "PUT") {
+
+        const id = parseInt(url.pathname.split("/").pop());
+
+        const body = await request.json();
+
+        await env.DB.prepare(
+          "UPDATE users SET name=?, department=?, position=? WHERE id=?"
+        )
+        .bind(
+          body.name,
+          body.department || "",
+          body.position || "",
+          id
+        )
+        .run();
+
+        return Response.json(
+          { success: true },
+          { headers: corsHeaders }
+        );
+      }
+
+
+      // ============================================
+      // DELETE USER
+      // ============================================
+      if (url.pathname.startsWith("/api/users/") && request.method === "DELETE") {
+
+        const id = parseInt(url.pathname.split("/").pop());
+
+        await env.DB.prepare(
+          "DELETE FROM users WHERE id=?"
+        )
+        .bind(id)
+        .run();
+
+        return Response.json(
+          { success: true },
+          { headers: corsHeaders }
+        );
+      }
+
+
+      return new Response("Not found", { status: 404 });
 
     } catch (err) {
-      return new Response(
-        JSON.stringify({
-          error: err.message
-        }),
+      return Response.json(
+        { error: err.message },
         { status: 500, headers: corsHeaders }
       );
     }

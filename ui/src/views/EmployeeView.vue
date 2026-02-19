@@ -1,33 +1,24 @@
 <template>
   <div class="justify-content-center mx-5">
+
+    <!-- Header -->
     <div class="input-group">
       <button
         type="button"
-        class="btn btn-primary m-2 fload-end"
+        class="btn btn-primary m-2"
         data-bs-toggle="modal"
         data-bs-target="#inputModal"
-        @click="addClick()"
+        @click="addClick"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          fill="currentColor"
-          class="bi bi-plus-square"
-          viewBox="0 0 16 16"
-        >
-          <path
-            d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"
-          />
-          <path
-            d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"
-          />
-        </svg>
+        +
       </button>
+
       <div class="mx-3 pt-2">
         <h4>{{ ja_Master }}</h4>
       </div>
     </div>
+
+    <!-- Table -->
     <table class="table table-striped">
       <thead>
         <tr>
@@ -35,58 +26,40 @@
           <th>{{ ja_Name }}</th>
           <th>{{ ja_Department }}</th>
           <th>{{ ja_Position }}</th>
+          <th>Action</th>
         </tr>
       </thead>
+
       <tbody>
-        <tr v-for="dat in employees" :key="dat.employeeId">
-          <td>{{ dat.employeeId }}</td>
-          <td>{{ dat.name }}</td>
-          <td>{{ dat.department }}</td>
-          <td>{{ dat.position }}</td>
+        <tr v-for="emp in employees" :key="emp.id">
+          <td>{{ emp.id }}</td>
+          <td>{{ emp.name }}</td>
+          <td>{{ emp.department }}</td>
+          <td>{{ emp.position }}</td>
           <td>
             <button
               type="button"
-              class="btn btn-light mr-1"
+              class="btn btn-light me-2"
               data-bs-toggle="modal"
               data-bs-target="#inputModal"
-              @click="editClick(dat)"
+              @click="editClick(emp)"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                class="bi bi-pencil-fill"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z"
-                />
-              </svg>
+              ✏️
             </button>
+
             <button
               type="button"
-              class="btn btn-light mr-1"
-              @click="deleteClick(dat.employeeId)"
+              class="btn btn-light"
+              @click="deleteClick(emp.id)"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                class="bi bi-trash"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"
-                />
-              </svg>
+              🗑️
             </button>
           </td>
         </tr>
       </tbody>
     </table>
+
+    <!-- Modal Component -->
     <input-modal-view
       :Title="modalTitle"
       :Id="EmployeeId"
@@ -95,145 +68,155 @@
     >
       <template v-slot:modalBody>
         <div class="modal-body">
+
           <div class="input-group mb-3">
             <span class="input-group-text">{{ ja_Name }}</span>
-            <input type="text" class="form-control" v-model="Name" />
+            <input
+              type="text"
+              class="form-control"
+              v-model="Name"
+            />
           </div>
+
           <div class="input-group mb-3">
             <span class="input-group-text">{{ ja_Department }}</span>
-            <input type="text" class="form-control" v-model="Department" />
+            <input
+              type="text"
+              class="form-control"
+              v-model="Department"
+            />
           </div>
+
           <div class="input-group mb-3">
             <span class="input-group-text">{{ ja_Position }}</span>
-            <input type="text" class="form-control" v-model="Position" />
+            <input
+              type="text"
+              class="form-control"
+              v-model="Position"
+            />
           </div>
+
         </div>
       </template>
     </input-modal-view>
+
   </div>
 </template>
+
 <script>
+import axios from "axios";
 import ja from "../locales/ja.json";
 import InputModalView from "./InputModalView.vue";
 
-const API = "https://system-api.potatoscript-com.workers.dev/api/users";
+const API_BASE = "https://system-api.potatoscript-com.workers.dev/api/users";
 
 export default {
-  components: { InputModalView },
+  components: {
+    InputModalView
+  },
 
   data() {
     return {
-      Department: "",
-      EmployeeId: 0,
       employees: [],
-      ja_Create: ja.Create,
-      ja_Department: ja.Department,
-      ja_Edit: ja.Edit,
+      EmployeeId: 0,
+      Name: "",
+      Department: "",
+      Position: "",
+      modalTitle: "",
+
+      // i18n
       ja_Master: ja.Master,
       ja_Name: ja.Name,
-      ja_New: ja.New,
+      ja_Department: ja.Department,
       ja_Position: ja.Position,
-      ja_Update: ja.Update,
-      modalTitle: "",
-      Name: "",
-      Position: "",
+      ja_New: ja.New,
+      ja_Edit: ja.Edit
     };
   },
 
   methods: {
 
-    // =====================
-    // ADD
-    // =====================
-    addClick() {
-      this.modalTitle = ja.New;
-      this.EmployeeId = 0;
-      this.Name = "";
-      this.Position = "";
-      this.Department = "";
-    },
-
-    // =====================
-    // CREATE
-    // =====================
-    async createClick() {
-      try {
-        await fetch(API, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: this.Name,
-            department: this.Department,
-            position: this.Position
-          })
-        });
-
-        document.getElementById("modal-close-btn").click();
-        this.refreshData();
-
-      } catch (error) {
-        alert("No Connection " + error);
-      }
-    },
-
-    // =====================
-    // DELETE
-    // =====================
-    async deleteClick(id) {
-      if (!confirm(ja.ConfirmDelete)) return;
-
-      try {
-        await fetch(`${API}/${id}`, { method: "DELETE" });
-        this.refreshData();
-      } catch (error) {
-        alert("No Connection " + error);
-      }
-    },
-
-    // =====================
-    // EDIT
-    // =====================
-    editClick(emp) {
-      this.modalTitle = ja.Edit;
-      this.EmployeeId = emp.id;
-      this.Name = emp.name;
-      this.Position = emp.position;
-      this.Department = emp.department;
-    },
-
-    // =====================
-    // READ
-    // =====================
+    // =============================
+    // Load All Employees
+    // =============================
     async refreshData() {
       try {
-        const res = await fetch(API);
-        this.employees = await res.json();
+        const response = await axios.get(API_BASE);
+        this.employees = response.data;
       } catch (error) {
-        console.log(error);
-        this.employees = [];
+        alert("Failed to fetch data: " + error);
       }
     },
 
-    // =====================
-    // UPDATE
-    // =====================
-    async updateClick() {
+    // =============================
+    // Add Button Click
+    // =============================
+    addClick() {
+      this.modalTitle = this.ja_New;
+      this.EmployeeId = 0;
+      this.Name = "";
+      this.Department = "";
+      this.Position = "";
+    },
+
+    // =============================
+    // Create
+    // =============================
+    async createClick() {
       try {
-        await fetch(`${API}/${this.EmployeeId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: this.Name,
-            department: this.Department,
-            position: this.Position
-          })
+        await axios.post(API_BASE, {
+          name: this.Name,
+          department: this.Department,
+          position: this.Position
         });
 
         document.getElementById("modal-close-btn").click();
         this.refreshData();
-
       } catch (error) {
-        alert("No Connection " + error);
+        alert("Create failed: " + error);
+      }
+    },
+
+    // =============================
+    // Edit Click
+    // =============================
+    editClick(emp) {
+      this.modalTitle = this.ja_Edit;
+      this.EmployeeId = emp.id;
+      this.Name = emp.name;
+      this.Department = emp.department;
+      this.Position = emp.position;
+    },
+
+    // =============================
+    // Update
+    // =============================
+    async updateClick() {
+      try {
+        await axios.put(`${API_BASE}/${this.EmployeeId}`, {
+          name: this.Name,
+          department: this.Department,
+          position: this.Position
+        });
+
+        document.getElementById("modal-close-btn").click();
+        this.refreshData();
+      } catch (error) {
+        alert("Update failed: " + error);
+      }
+    },
+
+    // =============================
+    // Delete
+    // =============================
+    async deleteClick(id) {
+      if (!confirm("Are you sure you want to delete?")) return;
+
+      try {
+        await axios.delete(`${API_BASE}/${id}`);
+        this.refreshData();
+      } catch (error) {
+        alert("Delete failed: " + error);
       }
     }
   },
@@ -243,4 +226,3 @@ export default {
   }
 };
 </script>
-
