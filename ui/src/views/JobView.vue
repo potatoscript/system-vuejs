@@ -1,8 +1,6 @@
 <template>
   <div class="justify-content-center mx-5">
-
-    <!-- Header -->
-    <div class="input-group mb-3">
+    <div class="input-group">
       <button
         type="button"
         class="btn btn-primary m-2"
@@ -17,32 +15,43 @@
       </div>
     </div>
 
-    <!-- Jobs Summary Table -->
+    <!-- Job Summary Table -->
     <table class="table table-striped">
       <thead>
         <tr>
           <th>{{ ja_Employee }}</th>
+          <th>{{ ja_Department }}</th>
           <th>{{ ja_TotalJobs }}</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="job in jobs" :key="job.employeeName">
-          <td>{{ job.employeeName }}</td>
-          <td>{{ job.total }}</td>
+        <tr v-for="dat in jobs" :key="dat.jobId">
+          <td data-bs-toggle="modal" data-bs-target="#employeeJobModal"
+              @click="getTargetEmployeeName(dat.employeeName)">
+            {{ dat.employeeName }}
+          </td>
+          <td data-bs-toggle="modal" data-bs-target="#employeeJobModal"
+              @click="getTargetEmployeeName(dat.employeeName)">
+            {{ dat.employeeDepartment }}
+          </td>
+          <td data-bs-toggle="modal" data-bs-target="#employeeJobModal"
+              @click="getTargetEmployeeName(dat.employeeName)">
+            {{ dat.jobContent }}
+          </td>
         </tr>
       </tbody>
     </table>
 
     <!-- Charts -->
-    <div style="max-width:400px;height:300px;margin:auto">
+    <div style="max-width:400px;margin:auto">
       <canvas id="jobPieChart"></canvas>
     </div>
 
-    <div style="max-width:600px;height:350px;margin:auto">
+    <div style="max-width:600px;margin:auto">
       <canvas id="jobBarChart"></canvas>
     </div>
 
-    <!-- Modal -->
+    <!-- Input Modal -->
     <input-modal-view
       :Title="modalTitle"
       :Id="JobId"
@@ -54,197 +63,308 @@
 
           <div class="input-group mb-3">
             <span class="input-group-text">{{ ja_Employee }}</span>
-            <input type="text" class="form-control" v-model="EmployeeName"/>
-          </div>
-
-          <div class="input-group mb-3">
-            <span class="input-group-text">{{ ja_Content }}</span>
-            <input type="text" class="form-control" v-model="JobContent"/>
+            <input type="text" class="form-control" v-model="EmployeeName" />
+            <span class="input-group-text">{{ ja_Department }}</span>
+            <input type="text" class="form-control" v-model="EmployeeDepartment" />
           </div>
 
           <div class="input-group mb-3">
             <span class="input-group-text">{{ ja_DueDate }}</span>
-            <input type="date" class="form-control" v-model="DueDate"/>
+            <input type="text" class="form-control" v-model="DueDate" />
+            <span class="input-group-text">{{ ja_Status }}</span>
+            <input type="text" class="form-control" v-model="Status" />
+          </div>
+
+          <div class="input-group">
+            <span class="input-group-text">{{ ja_Content }}</span>
+            <input type="text" class="form-control" v-model="JobContent" />
           </div>
 
         </div>
       </template>
     </input-modal-view>
 
+    <!-- Employee Detail Modal -->
+    <div class="modal fade" id="employeeJobModal">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              {{ EmployeeTargetName }} {{ ja_Job }}
+            </h5>
+            <button id="modal-closeDetail-btn"
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal">
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>{{ ja_Employee }}</th>
+                  <th>{{ ja_Content }}</th>
+                  <th>{{ ja_DueDate }}</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="dat in employeeJobs" :key="dat.jobId">
+                  <td>{{ dat.employeeName }}</td>
+                  <td>{{ dat.jobContent }}</td>
+                  <td>{{ dat.dueDate }}</td>
+                  <td>
+                    <button class="btn btn-light me-2"
+                            data-bs-toggle="modal"
+                            data-bs-target="#inputModal"
+                            @click="editClick(dat)">
+                      ✏️
+                    </button>
+
+                    <button class="btn btn-light"
+                            @click="deleteJobClick(dat.jobId)">
+                      🗑️
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script>
-import ja from "../locales/ja.json"
-import InputModalView from "./InputModalView.vue"
-import Chart from "chart.js/auto"
+import ja from "../locales/ja.json";
+import InputModalView from "./InputModalView.vue";
+import Chart from "chart.js/auto";
+import ChartDataLabels from "chartjs-plugin-datalabels";
 
 import {
-  getJobsSummary,
+  getTotalJobs,
+  getEmployeeJobs,
   createJob,
   updateJob,
   deleteJob
-} from "../api/jobs"
-
-let pieChart = null
-let barChart = null
+} from "../api/jobs";
 
 export default {
   components: { InputModalView },
 
   data() {
     return {
-      jobs: [],
-      JobId: 0,
-      EmployeeName: "",
-      JobContent: "",
-      DueDate: "",
-      modalTitle: "",
-
       ja_Job: ja.Job,
       ja_Employee: ja.Employee,
+      ja_Department: ja.Department,
       ja_Content: ja.Content,
       ja_DueDate: ja.DueDate,
+      ja_Status: ja.Status,
       ja_TotalJobs: ja.TotalJobs,
-      ja_New: ja.New,
-      ja_Edit: ja.Edit
-    }
+
+      jobs: [],
+      employeeJobs: [],
+
+      JobId: 0,
+      EmployeeName: "",
+      EmployeeTargetName: "",
+      EmployeeDepartment: "",
+      JobContent: "",
+      DueDate: "",
+      Status: "",
+
+      modalTitle: ja.New,
+
+      chartInstancePie: null,
+      chartInstanceBar: null
+    };
   },
 
   methods: {
 
-    // =====================
-    // Load Jobs Summary
-    // =====================
-    async refreshData() {
-      try {
-        this.jobs = await getJobsSummary()
-        this.renderCharts()
-      } catch (err) {
-        alert("Failed to load jobs: " + err)
-      }
+    currentDate() {
+      const d = new Date();
+      return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
     },
 
-    // =====================
-    // Add Button
-    // =====================
     addClick() {
-      this.modalTitle = this.ja_New
-      this.JobId = 0
-      this.EmployeeName = ""
-      this.JobContent = ""
-      this.DueDate = new Date().toISOString().split("T")[0]
+      this.modalTitle = ja.New;
+      this.JobId = 0;
+      this.EmployeeName = "";
+      this.EmployeeDepartment = "";
+      this.JobContent = "";
+      this.DueDate = this.currentDate();
+      this.Status = ja.DefaultStatus;
     },
 
-    // =====================
-    // Create
-    // =====================
     async createClick() {
       try {
         await createJob({
-          employeeName: this.EmployeeName,
-          jobContent: this.JobContent,
-          dueDate: this.DueDate
-        })
+          EmployeeName: this.EmployeeName,
+          EmployeeDepartment: this.EmployeeDepartment,
+          JobContent: this.JobContent,
+          DueDate: this.DueDate,
+          Status: this.Status
+        });
 
-        document.getElementById("modal-close-btn").click()
-        this.refreshData()
-      } catch (err) {
-        alert("Create failed: " + err)
+        document.getElementById("modal-close-btn").click();
+        this.refreshData();
+      } catch (e) {
+        alert("Create failed " + e);
       }
     },
 
-    // =====================
-    // Update
-    // =====================
+    editClick(dat) {
+      this.modalTitle = ja.Edit;
+      this.JobId = dat.jobId;
+      this.EmployeeName = dat.employeeName;
+      this.EmployeeDepartment = dat.employeeDepartment;
+      this.JobContent = dat.jobContent;
+      this.DueDate = dat.dueDate;
+      this.Status = dat.status;
+    },
+
     async updateClick() {
       try {
-        await updateJob(this.JobId, {
-          employeeName: this.EmployeeName,
-          jobContent: this.JobContent,
-          dueDate: this.DueDate
-        })
+        await updateJob({
+          JobId: this.JobId,
+          EmployeeName: this.EmployeeName,
+          EmployeeDepartment: this.EmployeeDepartment,
+          JobContent: this.JobContent,
+          DueDate: this.DueDate,
+          Status: this.Status
+        });
 
-        document.getElementById("modal-close-btn").click()
-        this.refreshData()
-      } catch (err) {
-        alert("Update failed: " + err)
+        document.getElementById("modal-close-btn").click();
+        this.refreshData();
+      } catch (e) {
+        alert("Update failed " + e);
       }
     },
 
-    // =====================
-    // Delete
-    // =====================
-    async deleteClick(id) {
-      if (!confirm("Delete this job?")) return
+    async deleteJobClick(id) {
+      if (!confirm(ja.ConfirmDelete)) return;
 
       try {
-        await deleteJob(id)
-        this.refreshData()
-      } catch (err) {
-        alert("Delete failed: " + err)
+        await deleteJob(id);
+        document.getElementById("modal-closeDetail-btn").click();
+        this.refreshData();
+      } catch (e) {
+        alert("Delete failed " + e);
       }
     },
 
-    // =====================
-    // Charts
-    // =====================
+    async getTargetEmployeeName(employeeName) {
+      this.EmployeeTargetName = employeeName;
+      this.employeeJobs = await getEmployeeJobs(employeeName);
+    },
+
+    async refreshData() {
+      this.jobs = await getTotalJobs();
+      this.renderCharts();
+    },
+
     renderCharts() {
-      const labels = this.jobs.map(j => j.employeeName)
-      const values = this.jobs.map(j => j.total)
+  const labels = this.jobs.map(j => j.employeeName);
+  const data = this.jobs.map(j => j.jobContent);
 
-      if (pieChart) pieChart.destroy()
-      if (barChart) barChart.destroy()
+  Chart.register(ChartDataLabels);
 
-      // Pie Chart
-      const ctxPie = document.getElementById("jobPieChart")
-      pieChart = new Chart(ctxPie, {
-        type: "doughnut",
-        data: {
-          labels,
-          datasets: [{
-            data: values,
-            backgroundColor: [
-              "#4CAF50",
-              "#2196F3",
-              "#FF9800",
-              "#9C27B0",
-              "#F44336",
-              "#00BCD4"
-            ]
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false
+  // Destroy old charts
+  if (this.chartInstancePie) this.chartInstancePie.destroy();
+  if (this.chartInstanceBar) this.chartInstanceBar.destroy();
+
+  const colors = [
+    "#4CAF50",
+    "#2196F3",
+    "#FF9800",
+    "#9C27B0",
+    "#F44336",
+    "#00BCD4",
+    "#FFC107",
+    "#8BC34A"
+  ];
+
+  // PIE (Doughnut)
+  this.chartInstancePie = new Chart(
+    document.getElementById("jobPieChart"),
+    {
+      type: "doughnut",
+      data: {
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: colors,
+          borderWidth: 2,
+          borderColor: "#ffffff"
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          datalabels: {
+            color: "#000",
+            font: {
+              weight: "bold",
+              size: 14
+            }
+          },
+          legend: {
+            position: "bottom"
+          }
         }
-      })
-
-      // Bar Chart
-      const ctxBar = document.getElementById("jobBarChart")
-      barChart = new Chart(ctxBar, {
-        type: "bar",
-        data: {
-          labels,
-          datasets: [{
-            label: "Total Jobs",
-            data: values,
-            backgroundColor: "#42A5F5"
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false
-        }
-      })
+      }
     }
+  );
+
+  // BAR
+  this.chartInstanceBar = new Chart(
+    document.getElementById("jobBarChart"),
+    {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{
+          label: "Total Jobs",
+          data,
+          backgroundColor: colors,
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        },
+        plugins: {
+          legend: {
+            display: false
+          }
+        }
+      }
+    }
+  );
+}
 
   },
 
   mounted() {
-    this.refreshData()
+    this.refreshData();
+
+    let user = localStorage.getItem("user-info");
+    if (!user) {
+      this.$router.push({ name: "login" });
+    }
   }
-}
+};
 </script>
 
 <style scoped>
