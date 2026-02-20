@@ -1,6 +1,8 @@
 <template>
   <div class="justify-content-center mx-5">
-    <div class="input-group">
+
+    <!-- Header -->
+    <div class="input-group mb-3">
       <button
         type="button"
         class="btn btn-primary m-2"
@@ -15,38 +17,32 @@
       </div>
     </div>
 
-    <!-- Job Summary Table -->
+    <!-- Jobs Summary Table -->
     <table class="table table-striped">
       <thead>
         <tr>
           <th>{{ ja_Employee }}</th>
-          <th>{{ ja_Department }}</th>
           <th>{{ ja_TotalJobs }}</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="dat in jobs" :key="dat.jobId">
-          <td data-bs-toggle="modal" data-bs-target="#employeeJobModal"
-              @click="getTargetEmployeeName(dat.employeeName)">
-            {{ dat.employeeName }}
-          </td>
-          <td data-bs-toggle="modal" data-bs-target="#employeeJobModal"
-              @click="getTargetEmployeeName(dat.employeeName)">
-            {{ dat.employeeDepartment }}
-          </td>
-          <td data-bs-toggle="modal" data-bs-target="#employeeJobModal"
-              @click="getTargetEmployeeName(dat.employeeName)">
-            {{ dat.jobContent }}
-          </td>
+        <tr v-for="job in jobs" :key="job.employeeName">
+          <td>{{ job.employeeName }}</td>
+          <td>{{ job.total }}</td>
         </tr>
       </tbody>
     </table>
 
     <!-- Charts -->
-    <canvas id="jobPieChart" height="200"></canvas>
-    <canvas id="jobBarChart" height="200"></canvas>
+    <div style="max-width:400px;height:300px;margin:auto">
+      <canvas id="jobPieChart"></canvas>
+    </div>
 
-    <!-- Input Modal -->
+    <div style="max-width:600px;height:350px;margin:auto">
+      <canvas id="jobBarChart"></canvas>
+    </div>
+
+    <!-- Modal -->
     <input-modal-view
       :Title="modalTitle"
       :Id="JobId"
@@ -58,248 +54,197 @@
 
           <div class="input-group mb-3">
             <span class="input-group-text">{{ ja_Employee }}</span>
-            <input type="text" class="form-control" v-model="EmployeeName" />
-            <span class="input-group-text">{{ ja_Department }}</span>
-            <input type="text" class="form-control" v-model="EmployeeDepartment" />
+            <input type="text" class="form-control" v-model="EmployeeName"/>
+          </div>
+
+          <div class="input-group mb-3">
+            <span class="input-group-text">{{ ja_Content }}</span>
+            <input type="text" class="form-control" v-model="JobContent"/>
           </div>
 
           <div class="input-group mb-3">
             <span class="input-group-text">{{ ja_DueDate }}</span>
-            <input type="text" class="form-control" v-model="DueDate" />
-            <span class="input-group-text">{{ ja_Status }}</span>
-            <input type="text" class="form-control" v-model="Status" />
-          </div>
-
-          <div class="input-group">
-            <span class="input-group-text">{{ ja_Content }}</span>
-            <input type="text" class="form-control" v-model="JobContent" />
+            <input type="date" class="form-control" v-model="DueDate"/>
           </div>
 
         </div>
       </template>
     </input-modal-view>
 
-    <!-- Employee Detail Modal -->
-    <div class="modal fade" id="employeeJobModal">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">
-              {{ EmployeeTargetName }} {{ ja_Job }}
-            </h5>
-            <button id="modal-closeDetail-btn"
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="modal">
-            </button>
-          </div>
-
-          <div class="modal-body">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>{{ ja_Employee }}</th>
-                  <th>{{ ja_Content }}</th>
-                  <th>{{ ja_DueDate }}</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="dat in employeeJobs" :key="dat.jobId">
-                  <td>{{ dat.employeeName }}</td>
-                  <td>{{ dat.jobContent }}</td>
-                  <td>{{ dat.dueDate }}</td>
-                  <td>
-                    <button class="btn btn-light me-2"
-                            data-bs-toggle="modal"
-                            data-bs-target="#inputModal"
-                            @click="editClick(dat)">
-                      ✏️
-                    </button>
-
-                    <button class="btn btn-light"
-                            @click="deleteJobClick(dat.jobId)">
-                      🗑️
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
   </div>
 </template>
 
 <script>
-import ja from "../locales/ja.json";
-import InputModalView from "./InputModalView.vue";
-import Chart from "chart.js/auto";
-import ChartDataLabels from "chartjs-plugin-datalabels";
+import ja from "../locales/ja.json"
+import InputModalView from "./InputModalView.vue"
+import Chart from "chart.js/auto"
 
 import {
-  getTotalJobs,
-  getEmployeeJobs,
+  getJobsSummary,
   createJob,
   updateJob,
   deleteJob
-} from "../api/jobs";
+} from "../api/jobs"
+
+let pieChart = null
+let barChart = null
 
 export default {
   components: { InputModalView },
 
   data() {
     return {
-      ja_Job: ja.Job,
-      ja_Employee: ja.Employee,
-      ja_Department: ja.Department,
-      ja_Content: ja.Content,
-      ja_DueDate: ja.DueDate,
-      ja_Status: ja.Status,
-      ja_TotalJobs: ja.TotalJobs,
-
       jobs: [],
-      employeeJobs: [],
-
       JobId: 0,
       EmployeeName: "",
-      EmployeeTargetName: "",
-      EmployeeDepartment: "",
       JobContent: "",
       DueDate: "",
-      Status: "",
+      modalTitle: "",
 
-      modalTitle: ja.New,
-
-      chartInstancePie: null,
-      chartInstanceBar: null
-    };
+      ja_Job: ja.Job,
+      ja_Employee: ja.Employee,
+      ja_Content: ja.Content,
+      ja_DueDate: ja.DueDate,
+      ja_TotalJobs: ja.TotalJobs,
+      ja_New: ja.New,
+      ja_Edit: ja.Edit
+    }
   },
 
   methods: {
 
-    currentDate() {
-      const d = new Date();
-      return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+    // =====================
+    // Load Jobs Summary
+    // =====================
+    async refreshData() {
+      try {
+        this.jobs = await getJobsSummary()
+        this.renderCharts()
+      } catch (err) {
+        alert("Failed to load jobs: " + err)
+      }
     },
 
+    // =====================
+    // Add Button
+    // =====================
     addClick() {
-      this.modalTitle = ja.New;
-      this.JobId = 0;
-      this.EmployeeName = "";
-      this.EmployeeDepartment = "";
-      this.JobContent = "";
-      this.DueDate = this.currentDate();
-      this.Status = ja.DefaultStatus;
+      this.modalTitle = this.ja_New
+      this.JobId = 0
+      this.EmployeeName = ""
+      this.JobContent = ""
+      this.DueDate = new Date().toISOString().split("T")[0]
     },
 
+    // =====================
+    // Create
+    // =====================
     async createClick() {
       try {
         await createJob({
-          EmployeeName: this.EmployeeName,
-          EmployeeDepartment: this.EmployeeDepartment,
-          JobContent: this.JobContent,
-          DueDate: this.DueDate,
-          Status: this.Status
-        });
+          employeeName: this.EmployeeName,
+          jobContent: this.JobContent,
+          dueDate: this.DueDate
+        })
 
-        document.getElementById("modal-close-btn").click();
-        this.refreshData();
-      } catch (e) {
-        alert("Create failed " + e);
+        document.getElementById("modal-close-btn").click()
+        this.refreshData()
+      } catch (err) {
+        alert("Create failed: " + err)
       }
     },
 
-    editClick(dat) {
-      this.modalTitle = ja.Edit;
-      this.JobId = dat.jobId;
-      this.EmployeeName = dat.employeeName;
-      this.EmployeeDepartment = dat.employeeDepartment;
-      this.JobContent = dat.jobContent;
-      this.DueDate = dat.dueDate;
-      this.Status = dat.status;
-    },
-
+    // =====================
+    // Update
+    // =====================
     async updateClick() {
       try {
-        await updateJob({
-          JobId: this.JobId,
-          EmployeeName: this.EmployeeName,
-          EmployeeDepartment: this.EmployeeDepartment,
-          JobContent: this.JobContent,
-          DueDate: this.DueDate,
-          Status: this.Status
-        });
+        await updateJob(this.JobId, {
+          employeeName: this.EmployeeName,
+          jobContent: this.JobContent,
+          dueDate: this.DueDate
+        })
 
-        document.getElementById("modal-close-btn").click();
-        this.refreshData();
-      } catch (e) {
-        alert("Update failed " + e);
+        document.getElementById("modal-close-btn").click()
+        this.refreshData()
+      } catch (err) {
+        alert("Update failed: " + err)
       }
     },
 
-    async deleteJobClick(id) {
-      if (!confirm(ja.ConfirmDelete)) return;
+    // =====================
+    // Delete
+    // =====================
+    async deleteClick(id) {
+      if (!confirm("Delete this job?")) return
 
       try {
-        await deleteJob(id);
-        document.getElementById("modal-closeDetail-btn").click();
-        this.refreshData();
-      } catch (e) {
-        alert("Delete failed " + e);
+        await deleteJob(id)
+        this.refreshData()
+      } catch (err) {
+        alert("Delete failed: " + err)
       }
     },
 
-    async getTargetEmployeeName(employeeName) {
-      this.EmployeeTargetName = employeeName;
-      this.employeeJobs = await getEmployeeJobs(employeeName);
-    },
-
-    async refreshData() {
-      this.jobs = await getTotalJobs();
-      this.renderCharts();
-    },
-
+    // =====================
+    // Charts
+    // =====================
     renderCharts() {
-      const labels = this.jobs.map(j => j.employeeName);
-      const data = this.jobs.map(j => j.jobContent);
+      const labels = this.jobs.map(j => j.employeeName)
+      const values = this.jobs.map(j => j.total)
 
-      Chart.register(ChartDataLabels);
+      if (pieChart) pieChart.destroy()
+      if (barChart) barChart.destroy()
 
-      if (this.chartInstancePie) this.chartInstancePie.destroy();
-      if (this.chartInstanceBar) this.chartInstanceBar.destroy();
-
-      this.chartInstancePie = new Chart(
-        document.getElementById("jobPieChart"),
-        {
-          type: "doughnut",
-          data: { labels, datasets: [{ data }] }
+      // Pie Chart
+      const ctxPie = document.getElementById("jobPieChart")
+      pieChart = new Chart(ctxPie, {
+        type: "doughnut",
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: [
+              "#4CAF50",
+              "#2196F3",
+              "#FF9800",
+              "#9C27B0",
+              "#F44336",
+              "#00BCD4"
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
         }
-      );
+      })
 
-      this.chartInstanceBar = new Chart(
-        document.getElementById("jobBarChart"),
-        {
-          type: "bar",
-          data: { labels, datasets: [{ data }] }
+      // Bar Chart
+      const ctxBar = document.getElementById("jobBarChart")
+      barChart = new Chart(ctxBar, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [{
+            label: "Total Jobs",
+            data: values,
+            backgroundColor: "#42A5F5"
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
         }
-      );
+      })
     }
 
   },
 
   mounted() {
-    this.refreshData();
-
-    let user = localStorage.getItem("user-info");
-    if (!user) {
-      this.$router.push({ name: "login" });
-    }
+    this.refreshData()
   }
-};
+}
 </script>
 
 <style scoped>
