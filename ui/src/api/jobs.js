@@ -1,29 +1,40 @@
-import axios from "axios";
-import url from "../assets/js/url.js";
-
-const API_BASE = url.API_URL + "Job/";
+const API_BASE =
+  "https://system-vuejs.potatoscript-com.workers.dev/api";
 
 export const getTotalJobs = async () => {
-  const res = await axios.get(API_BASE + "read-total-jobs-employee");
-  return res.data;
+  const res = await fetch(`${API_BASE}/Job/read-total-jobs-employee`);
+  return res.json();
 };
 
 export const getEmployeeJobs = async (employeeName) => {
-  const res = await axios.get(API_BASE + "read-all-employee-jobs/" + employeeName);
-  return res.data;
+  const res = await fetch(
+    `${API_BASE}/Job/read-all-employee-jobs/${employeeName}`
+  );
+  return res.json();
 };
 
 export const createJob = async (job) => {
-  const res = await axios.post(API_BASE + "create-job", job);
-  return res.data;
+  const res = await fetch(`${API_BASE}/Job/create-job`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(job)
+  });
+  return res.json();
 };
 
 export const updateJob = async (job) => {
-  const res = await axios.put(API_BASE + "update-job-by-id/", job);
-  return res.data;
+  const res = await fetch(`${API_BASE}/Job/update-job-by-id/`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(job)
+  });
+  return res.json();
 };
 
 export const deleteJob = async (id) => {
-  const res = await axios.delete(API_BASE + "delete-job-by-id/" + id);
-  return res.data;
+  const res = await fetch(
+    `${API_BASE}/Job/delete-job-by-id/${id}`,
+    { method: "DELETE" }
+  );
+  return res.json();
 };
