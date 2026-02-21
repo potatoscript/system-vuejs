@@ -296,7 +296,20 @@ export default {
         return colors;
       };
 
-      const dynamicColors = generateColors(data.length);
+      //const dynamicColors = generateColors(data.length);
+      const generateColors = (count) => {
+        const colors = [];
+        const baseHue = 210; // blue-based harmony
+
+        for (let i = 0; i < count; i++) {
+          const hueShift = (i * 25) % 360;
+          const hue = (baseHue + hueShift) % 360;
+
+          colors.push(`hsla(${hue}, 45%, 70%, 0.85)`);
+        }
+
+        return colors;
+      };
 
       // Doughnut
       this.chartInstancePie = new Chart(

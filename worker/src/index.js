@@ -95,30 +95,34 @@ export default {
       }
 
       // UPDATE job
-      if (url.pathname === "/api/Job/update-job-by-id" && request.method === "PUT") {
-        const body = await request.json();
+			if (
+				url.pathname.startsWith("/api/Job/update-job-by-id/") &&
+				request.method === "PUT"
+			) {
+				const id = url.pathname.split("/").pop();
+				const body = await request.json();
 
-        await env.DB.prepare(`
-          UPDATE jobs
-          SET employeeName=?,
-              employeeDepartment=?,
-              jobContent=?,
-              dueDate=?,
-              status=?
-          WHERE jobId=?
-        `)
-          .bind(
-            body.EmployeeName,
-            body.EmployeeDepartment,
-            body.JobContent,
-            body.DueDate,
-            body.Status,
-            body.JobId
-          )
-          .run();
+				await env.DB.prepare(`
+					UPDATE jobs
+					SET employeeName=?,
+							employeeDepartment=?,
+							jobContent=?,
+							dueDate=?,
+							status=?
+					WHERE jobId=?
+				`)
+					.bind(
+						body.EmployeeName,
+						body.EmployeeDepartment,
+						body.JobContent,
+						body.DueDate,
+						body.Status,
+						id   // ✅ use ID from URL
+					)
+					.run();
 
-        return Response.json({ success: true }, { headers: corsHeaders });
-      }
+				return Response.json({ success: true }, { headers: corsHeaders });
+			}
 
       // DELETE job
       if (url.pathname.startsWith("/api/Job/delete-job-by-id/") && request.method === "DELETE") {
