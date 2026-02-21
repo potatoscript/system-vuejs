@@ -289,16 +289,6 @@ export default {
 
       const generateColors = (count) => {
         const colors = [];
-        for (let i = 0; i < count; i++) {
-          const hue = Math.floor((360 / count) * i);
-          colors.push(`hsl(${hue}, 70%, 55%)`);
-        }
-        return colors;
-      };
-
-      //const dynamicColors = generateColors(data.length);
-      const generateColors = (count) => {
-        const colors = [];
         const baseHue = 210; // blue-based harmony
 
         for (let i = 0; i < count; i++) {
@@ -310,6 +300,9 @@ export default {
 
         return colors;
       };
+
+      const dynamicColors = generateColors(data.length);
+      
 
       // Doughnut
       this.chartInstancePie = new Chart(
