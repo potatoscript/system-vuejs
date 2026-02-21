@@ -184,8 +184,16 @@ export default {
     };
   },
 
-  methods: {
+  mounted() {
+    this.refreshData();
 
+    const user = localStorage.getItem("user-info");
+    if (!user) {
+      this.$router.push({ name: "login" });
+    }
+  },
+
+  methods: {
     currentDate() {
       const d = new Date();
       return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
@@ -212,7 +220,7 @@ export default {
         });
 
         document.getElementById("modal-close-btn").click();
-        this.refreshData();
+        await this.refreshData();
       } catch (e) {
         alert("Create failed " + e);
       }
@@ -240,7 +248,7 @@ export default {
         });
 
         document.getElementById("modal-close-btn").click();
-        this.refreshData();
+        await this.refreshData();
       } catch (e) {
         alert("Update failed " + e);
       }
@@ -252,7 +260,7 @@ export default {
       try {
         await deleteJob(id);
         document.getElementById("modal-closeDetail-btn").click();
-        this.refreshData();
+        await this.refreshData();
       } catch (e) {
         alert("Delete failed " + e);
       }
@@ -269,16 +277,16 @@ export default {
     },
 
     renderCharts() {
+      if (!this.jobs || !this.jobs.length) return;
+
       const labels = this.jobs.map(j => j.employeeName);
       const data = this.jobs.map(j => j.jobContent);
 
       Chart.register(ChartDataLabels);
 
-      // Destroy old charts before re-render
       if (this.chartInstancePie) this.chartInstancePie.destroy();
       if (this.chartInstanceBar) this.chartInstanceBar.destroy();
 
-      // 🔥 Auto Generate Colors
       const generateColors = (count) => {
         const colors = [];
         for (let i = 0; i < count; i++) {
@@ -290,9 +298,7 @@ export default {
 
       const dynamicColors = generateColors(data.length);
 
-      // ======================
-      // Doughnut Chart
-      // ======================
+      // Doughnut
       this.chartInstancePie = new Chart(
         document.getElementById("jobPieChart"),
         {
@@ -309,31 +315,22 @@ export default {
           options: {
             responsive: true,
             maintainAspectRatio: false,
-
             animation: {
               duration: 1200,
               easing: "easeOutBounce"
             },
-
             plugins: {
-              legend: {
-                position: "bottom"
-              },
+              legend: { position: "bottom" },
               datalabels: {
                 color: "#000",
-                font: {
-                  weight: "bold",
-                  size: 14
-                }
+                font: { weight: "bold", size: 14 }
               }
             }
           }
         }
       );
 
-      // ======================
-      // Bar Chart
-      // ======================
+      // Bar
       this.chartInstanceBar = new Chart(
         document.getElementById("jobBarChart"),
         {
@@ -350,34 +347,19 @@ export default {
           options: {
             responsive: true,
             maintainAspectRatio: false,
-
             animation: {
               duration: 1400,
               easing: "easeOutElastic"
             },
-
             scales: {
-              y: {
-                beginAtZero: true
-              }
+              y: { beginAtZero: true }
             },
-
             plugins: {
-              legend: {
-                display: false
-              }
+              legend: { display: false }
             }
           }
         }
       );
-    },
-
-  mounted() {
-    this.refreshData();
-
-    let user = localStorage.getItem("user-info");
-    if (!user) {
-      this.$router.push({ name: "login" });
     }
   }
 };
