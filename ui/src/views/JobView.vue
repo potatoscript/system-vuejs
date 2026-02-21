@@ -269,92 +269,108 @@ export default {
     },
 
     renderCharts() {
-  const labels = this.jobs.map(j => j.employeeName);
-  const data = this.jobs.map(j => j.jobContent);
+      const labels = this.jobs.map(j => j.employeeName);
+      const data = this.jobs.map(j => j.jobContent);
 
-  Chart.register(ChartDataLabels);
+      Chart.register(ChartDataLabels);
 
-  // Destroy old charts
-  if (this.chartInstancePie) this.chartInstancePie.destroy();
-  if (this.chartInstanceBar) this.chartInstanceBar.destroy();
+      // Destroy old charts before re-render
+      if (this.chartInstancePie) this.chartInstancePie.destroy();
+      if (this.chartInstanceBar) this.chartInstanceBar.destroy();
 
-  const colors = [
-    "#4CAF50",
-    "#2196F3",
-    "#FF9800",
-    "#9C27B0",
-    "#F44336",
-    "#00BCD4",
-    "#FFC107",
-    "#8BC34A"
-  ];
+      // 🔥 Auto Generate Colors
+      const generateColors = (count) => {
+        const colors = [];
+        for (let i = 0; i < count; i++) {
+          const hue = Math.floor((360 / count) * i);
+          colors.push(`hsl(${hue}, 70%, 55%)`);
+        }
+        return colors;
+      };
 
-  // PIE (Doughnut)
-  this.chartInstancePie = new Chart(
-    document.getElementById("jobPieChart"),
-    {
-      type: "doughnut",
-      data: {
-        labels,
-        datasets: [{
-          data,
-          backgroundColor: colors,
-          borderWidth: 2,
-          borderColor: "#ffffff"
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          datalabels: {
-            color: "#000",
-            font: {
-              weight: "bold",
-              size: 14
-            }
+      const dynamicColors = generateColors(data.length);
+
+      // ======================
+      // Doughnut Chart
+      // ======================
+      this.chartInstancePie = new Chart(
+        document.getElementById("jobPieChart"),
+        {
+          type: "doughnut",
+          data: {
+            labels,
+            datasets: [{
+              data,
+              backgroundColor: dynamicColors,
+              borderWidth: 2,
+              borderColor: "#fff"
+            }]
           },
-          legend: {
-            position: "bottom"
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            animation: {
+              duration: 1200,
+              easing: "easeOutBounce"
+            },
+
+            plugins: {
+              legend: {
+                position: "bottom"
+              },
+              datalabels: {
+                color: "#000",
+                font: {
+                  weight: "bold",
+                  size: 14
+                }
+              }
+            }
           }
         }
-      }
-    }
-  );
+      );
 
-  // BAR
-  this.chartInstanceBar = new Chart(
-    document.getElementById("jobBarChart"),
-    {
-      type: "bar",
-      data: {
-        labels,
-        datasets: [{
-          label: "Total Jobs",
-          data,
-          backgroundColor: colors,
-          borderRadius: 6
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: true
-          }
-        },
-        plugins: {
-          legend: {
-            display: false
+      // ======================
+      // Bar Chart
+      // ======================
+      this.chartInstanceBar = new Chart(
+        document.getElementById("jobBarChart"),
+        {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [{
+              label: "Total Jobs",
+              data,
+              backgroundColor: dynamicColors,
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            animation: {
+              duration: 1400,
+              easing: "easeOutElastic"
+            },
+
+            scales: {
+              y: {
+                beginAtZero: true
+              }
+            },
+
+            plugins: {
+              legend: {
+                display: false
+              }
+            }
           }
         }
-      }
-    }
-  );
-}
-
-  },
+      );
+    },
 
   mounted() {
     this.refreshData();
