@@ -24,10 +24,21 @@ export default {
   },
   watch: {
     $route() {
-      let user = localStorage.getItem("user-info");
+      const user = localStorage.getItem("user-info");
       this.showHeader = false;
+
       if (user) {
-        this.name = JSON.parse(user)[0].name;
+        const parsedUser = JSON.parse(user);
+
+        // if backend returns array
+        if (Array.isArray(parsedUser)) {
+          this.name = parsedUser[0]?.name || "";
+        } 
+        // if backend returns object (Cloudflare Worker case)
+        else {
+          this.name = parsedUser?.name || "";
+        }
+
         this.showHeader = true;
       }
     },
