@@ -165,6 +165,38 @@ export default {
         return Response.json(result.results, { headers: corsHeaders });
       }
 
+			// ==========================
+			// SIGN UP
+			// ==========================
+			if (url.pathname === "/api/auth/signup" && request.method === "POST") {
+				const body = await request.json();
+
+				// check existing email
+				const existing = await env.DB.prepare(
+					"SELECT * FROM auth_users WHERE email=?"
+				)
+					.bind(body.email)
+					.first();
+
+				if (existing) {
+					return Response.json(
+						{ error: "Email already exists" },
+						{ status: 400, headers: corsHeaders }
+					);
+				}
+
+				await env.DB.prepare(
+					"INSERT INTO auth_users (name, email, password) VALUES (?, ?, ?)"
+				)
+					.bind(body.name, body.email, body.password)
+					.run();
+
+				return Response.json(
+					{ success: true, name: body.name, email: body.email },
+					{ headers: corsHeaders }
+				);
+			}
+
       // =====================================================
 
       return new Response(
