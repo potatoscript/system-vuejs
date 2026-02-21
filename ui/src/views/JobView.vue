@@ -238,8 +238,8 @@ export default {
 
     async updateClick() {
       try {
-        await updateJob({
-          JobId: this.JobId,
+
+        await updateJob(this.JobId, {
           EmployeeName: this.EmployeeName,
           EmployeeDepartment: this.EmployeeDepartment,
           JobContent: this.JobContent,

@@ -22,14 +22,13 @@ export const createJob = async (job) => {
   return res.json();
 };
 
-export const updateJob = async (job) => {
-  const res = await fetch(`${API_BASE}/Job/update-job-by-id/`, {
+
+export const updateJob = (id, job) =>
+  fetch(`${API}/api/jobs/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(job)
   });
-  return res.json();
-};
 
 export const deleteJob = async (id) => {
   const res = await fetch(
