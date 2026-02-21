@@ -197,6 +197,28 @@ export default {
 				);
 			}
 
+			// LOGIN user
+			if (url.pathname === "/api/auth/login" && request.method === "POST") {
+				const body = await request.json();
+
+				const result = await env.DB.prepare(`
+					SELECT id, name, email
+					FROM users
+					WHERE email = ? AND password = ?
+				`)
+					.bind(body.email, body.password)
+					.all();
+
+				if (result.results.length === 0) {
+					return Response.json(
+						{ error: "Invalid credentials" },
+						{ status: 401, headers: corsHeaders }
+					);
+				}
+
+				return Response.json(result.results[0], { headers: corsHeaders });
+			}
+
       // =====================================================
 
       return new Response(
